@@ -22,7 +22,10 @@ pub fn generate_account_fields(
                 let ty = if info.is_signer {
                     quote! { Signer<'info> }
                 } else {
-                    quote! { AccountInfo<'info> }
+                    match info.is_optional {
+                        Some(true) => quote! { Option<AccountInfo<'info>> },
+                        _ => quote! { AccountInfo<'info> },
+                    }
                 };
                 quote! {
                    #annotation
