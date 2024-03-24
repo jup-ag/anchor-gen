@@ -9,7 +9,8 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 
 use crate::{
-    generate_accounts, generate_ix_handlers, generate_ix_structs, generate_typedefs, GEN_VERSION,
+    generate_accounts, generate_events, generate_ix_handlers, generate_ix_structs,
+    generate_typedefs, GEN_VERSION,
 };
 
 #[derive(Default, FromMeta)]
@@ -79,13 +80,13 @@ impl Generator {
         let ix_structs = generate_ix_structs(&idl.instructions);
 
         let docs = format!(
-        " Anchor CPI crate generated from {} v{} using [anchor-gen](https://crates.io/crates/anchor-gen) v{}.",
-        &idl.name,
-        &idl.version,
-        &GEN_VERSION.unwrap_or("unknown")
-    );
+            " Anchor CPI crate generated from {} v{} using [anchor-gen](https://crates.io/crates/anchor-gen) v{}.",
+            &idl.name,
+            &idl.version,
+            &GEN_VERSION.unwrap_or("unknown")
+        );
 
-        quote! {
+        let token_stream = quote! {
             use anchor_lang::prelude::*;
 
             pub mod typedefs {
@@ -106,16 +107,48 @@ impl Generator {
                 #ix_structs
             }
 
-            use ix_accounts::*;
-            pub use state::*;
-            pub use typedefs::*;
+        };
 
-            #[program]
-            pub mod #program_name {
-                #![doc = #docs]
+        if let Some(events) = &idl.events {
+            let event_stream = generate_events(&events);
 
-                use super::*;
-                #ix_handlers
+            quote! {
+                #token_stream
+
+                pub mod events {
+                    //! Events emitted by the program.
+                    use super::*;
+                    #event_stream
+                }
+
+                use ix_accounts::*;
+                pub use state::*;
+                pub use events::*;
+                pub use typedefs::*;
+
+                #[program]
+                pub mod #program_name {
+                    #![doc = #docs]
+
+                    use super::*;
+                    #ix_handlers
+                }
+            }
+        } else {
+            quote! {
+                #token_stream
+
+                use ix_accounts::*;
+                pub use state::*;
+                pub use typedefs::*;
+
+                #[program]
+                pub mod #program_name {
+                    #![doc = #docs]
+
+                    use super::*;
+                    #ix_handlers
+                }
             }
         }
     }
