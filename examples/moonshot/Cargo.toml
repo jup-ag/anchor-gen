@@ -1,0 +1,20 @@
+[package]
+name = "moonshot"
+version = "0.3.3"
+edition = "2021"
+description = "Moonshot CPI"
+authors = []
+repository = "https://github.com/saber-hq/anchor-gen"
+license = "Apache-2.0"
+keywords = ["solana", "anchor"]
+
+[features]
+default = ["cpi"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+
+[dependencies]
+anchor-gen = { version = "0.3.4", path = "../../crates/anchor-gen" }
+anchor-lang = ">=0.20"
