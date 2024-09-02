@@ -7,12 +7,71 @@
 //! [anchor-gen](https://github.com/saber-hq/anchor-gen), a crate for generating
 //! Anchor CPI helpers from JSON IDLs.
 use anchor_lang::prelude::*;
+use borsh::{BorshSerialize,BorshDeserialize};
 
 anchor_gen::generate_cpi_interface!(
     idl_path = "idl.json",
-    zero_copy(TickArray, Tick),
-    packed(TickArray, Tick)
 );
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct OpenPositionWithMetadataBumps {
+    pub position_bump: u8,
+    pub metadata_bump: u8,
+}
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct OpenPositionBumps {
+    pub position_bump: u8,
+}
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct WhirlpoolBumps {
+    pub whirlpool_bump: u8,
+}
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct RemainingAccountsInfo {
+    pub slices: Vec<RemainingAccountsSlice>,
+}
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct RemainingAccountsSlice {
+    pub accounts_type: AccountsType,
+    pub length: u64,
+}
+
+
+#[derive(BorshSerialize, BorshDeserialize)]
+pub enum CurrIndex {
+    Below,
+    Inside,
+    Above,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Clone, Default, Copy)]
+pub struct PositionRewardInfo {
+    pub growth_inside_checkpoint: u128,
+    pub amount_owed: u64,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Clone, Default, Copy)]
+pub struct Tick {
+    pub initialized: bool,
+    pub liquidity_net: i128,
+    pub liquidity_gross: u128,
+    pub fee_growth_outside_a: u128,
+    pub fee_growth_outside_b: u128,
+    pub reward_growths_outside: [u128; 3],
+}
+
+#[derive(BorshSerialize, BorshDeserialize,Clone, Default, Copy)]
+pub struct WhirlpoolRewardInfo {
+    pub mint: Pubkey,
+    pub vault: Pubkey,
+    pub authority: Pubkey,
+    pub emissions_per_second_x64: u128,
+    pub growth_global_x64: u128,
+}
 
 impl Default for state::TickArray {
     fn default() -> Self {
